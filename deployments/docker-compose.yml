@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  email-service:
+    build:
+      context: ..
+      dockerfile: deployments/Dockerfile
+    container_name: email-service
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_HOST=0.0.0.0
+      - SERVER_HTTP_PORT=8080
+      - DATABASE_DRIVER=postgres
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USERNAME=postgres
+      - DATABASE_PASSWORD=password
+      - DATABASE_NAME=email_service
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_VHOST=/
+      - APP_ENVIRONMENT=development
+      - APP_LOG_LEVEL=debug
+      - AUTH_ADMIN_API_TOKEN=admin-token-for-development-only
+    volumes:
+      - ../storage:/app/storage
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - email-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: email-postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=email_service
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - email-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: email-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - email-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: email-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - email-network
+
+  mailhog:
+    image: mailhog/mailhog
+    container_name: email-mailhog
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI port
+    networks:
+      - email-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  email-network:
+    driver: bridge

@@ -1,0 +1,2003 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Email Microservice API",
+    "description": "API untuk Email Microservice yang mendukung pengiriman email, manajemen template, dan pelacakan email.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Tim API Email Microservice",
+      "email": "api-support@example.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/api/v1",
+      "description": "Development Server"
+    },
+    {
+      "url": "https://api.example.com/api/v1",
+      "description": "Production Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Email",
+      "description": "Operasi terkait pengiriman email"
+    },
+    {
+      "name": "Template",
+      "description": "Operasi terkait manajemen template email"
+    },
+    {
+      "name": "Tracking",
+      "description": "Operasi terkait pelacakan email"
+    },
+    {
+      "name": "API Key",
+      "description": "Operasi terkait manajemen API key"
+    }
+  ],
+  "paths": {
+    "/emails/manual": {
+      "post": {
+        "tags": ["Email"],
+        "summary": "Mengirim email kustom",
+        "description": "Mengirim email dengan konten yang ditentukan oleh pengguna",
+        "operationId": "sendManualEmail",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Payload pengiriman email",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Email diantrekan untuk pengiriman",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit terlampaui",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/emails/template": {
+      "post": {
+        "tags": ["Email"],
+        "summary": "Mengirim email dengan template",
+        "description": "Mengirim email menggunakan template yang sudah ada dengan variabel yang ditentukan",
+        "operationId": "sendTemplateEmail",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Payload pengiriman email dengan template",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Email diantrekan untuk pengiriman",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit terlampaui",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/emails/{id}/status": {
+      "get": {
+        "tags": ["Email"],
+        "summary": "Mendapatkan status email",
+        "description": "Mendapatkan status pengiriman email",
+        "operationId": "getEmailStatus",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID email",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status email berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailStatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Email tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/templates": {
+      "post": {
+        "tags": ["Template"],
+        "summary": "Membuat template email baru",
+        "description": "Membuat template email baru untuk digunakan dalam pengiriman email",
+        "operationId": "createTemplate",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Payload pembuatan template",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Template berhasil dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Template dengan nama tersebut sudah ada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Template"],
+        "summary": "Mendapatkan daftar template",
+        "description": "Mendapatkan daftar template email yang tersedia",
+        "operationId": "getTemplates",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Nomor halaman",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Jumlah item per halaman",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter berdasarkan kategori",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter berdasarkan status",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["active", "inactive"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar template berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplatesListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/templates/{id}": {
+      "get": {
+        "tags": ["Template"],
+        "summary": "Mendapatkan detail template",
+        "description": "Mendapatkan detail lengkap template email",
+        "operationId": "getTemplate",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID template",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detail template berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDetailResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Template"],
+        "summary": "Memperbarui template",
+        "description": "Memperbarui template email yang sudah ada",
+        "operationId": "updateTemplate",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID template",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Payload pembaruan template",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Template berhasil diperbarui",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateUpdateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Template"],
+        "summary": "Menghapus template",
+        "description": "Menghapus template email",
+        "operationId": "deleteTemplate",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID template",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template berhasil dihapus",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tracking/{email_id}": {
+      "get": {
+        "tags": ["Tracking"],
+        "summary": "Mendapatkan tracking email",
+        "description": "Mendapatkan data tracking untuk email tertentu",
+        "operationId": "getTracking",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "email_id",
+            "in": "path",
+            "description": "ID email",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data tracking berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackingResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Email tidak ditemukan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tracking/stats": {
+      "get": {
+        "tags": ["Tracking"],
+        "summary": "Mendapatkan statistik tracking",
+        "description": "Mendapatkan statistik agregat untuk email yang dikirim",
+        "operationId": "getTrackingStats",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "emailId",
+            "in": "query",
+            "description": "ID email spesifik",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campaignId",
+            "in": "query",
+            "description": "ID kampanye",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "startDate",
+            "in": "query",
+            "description": "Tanggal awal (format ISO8601)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "endDate",
+            "in": "query",
+            "description": "Tanggal akhir (format ISO8601)",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "templateId",
+            "in": "query",
+            "description": "ID template",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistik tracking berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackingStatsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tracking/webhooks": {
+      "post": {
+        "tags": ["Tracking"],
+        "summary": "Membuat webhook untuk tracking",
+        "description": "Membuat webhook untuk menerima notifikasi event tracking secara real-time",
+        "operationId": "createWebhook",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Payload pembuatan webhook",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook berhasil dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api-keys": {
+      "post": {
+        "tags": ["API Key"],
+        "summary": "Membuat API key baru",
+        "description": "Membuat API key baru untuk mengakses API",
+        "operationId": "createApiKey",
+        "security": [
+          {
+            "AdminTokenAuth": []
+          }
+        ],
+        "requestBody": {
+          "description": "Payload pembuatan API key",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiKeyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "API key berhasil dibuat",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["API Key"],
+        "summary": "Mendapatkan daftar API key",
+        "description": "Mendapatkan daftar API key yang tersedia",
+        "operationId": "getApiKeys",
+        "security": [
+          {
+            "AdminTokenAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Nomor halaman",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Jumlah item per halaman",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "description": "Filter berdasarkan status aktif",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Daftar API key berhasil diambil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeysListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autentikasi gagal",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ManualEmailRequest": {
+        "type": "object",
+        "required": ["to", "subject", "body"],
+        "properties": {
+          "to": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            },
+            "description": "Daftar penerima email"
+          },
+          "cc": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            },
+            "description": "Daftar carbon copy"
+          },
+          "bcc": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            },
+            "description": "Daftar blind carbon copy"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Subjek email"
+          },
+          "body": {
+            "type": "object",
+            "required": ["text"],
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "Konten email dalam format teks biasa"
+              },
+              "html": {
+                "type": "string",
+                "description": "Konten email dalam format HTML"
+              }
+            }
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["filename", "content", "contentType"],
+              "properties": {
+                "filename": {
+                  "type": "string",
+                  "description": "Nama file lampiran"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Konten file dalam format base64"
+                },
+                "contentType": {
+                  "type": "string",
+                  "description": "MIME type file"
+                }
+              }
+            }
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["high", "normal", "low"],
+            "default": "normal",
+            "description": "Prioritas email"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Header email kustom"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Metadata untuk keperluan tracking"
+          }
+        }
+      },
+      "TemplateEmailRequest": {
+        "type": "object",
+        "required": ["templateId", "to", "variables"],
+        "properties": {
+          "templateId": {
+            "type": "string",
+            "description": "ID template yang akan digunakan"
+          },
+          "to": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            },
+            "description": "Daftar penerima email"
+          },
+          "cc": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            },
+            "description": "Daftar carbon copy"
+          },
+          "bcc": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "email"
+            },
+            "description": "Daftar blind carbon copy"
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Variabel yang akan digunakan dalam template"
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["filename", "content", "contentType"],
+              "properties": {
+                "filename": {
+                  "type": "string",
+                  "description": "Nama file lampiran"
+                },
+                "content": {
+                  "type": "string",
+                  "description": "Konten file dalam format base64"
+                },
+                "contentType": {
+                  "type": "string",
+                  "description": "MIME type file"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Metadata untuk keperluan tracking"
+          }
+        }
+      },
+      "EmailResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "email_id": {
+                "type": "string",
+                "description": "ID unik email"
+              }
+            }
+          }
+        }
+      },
+      "EmailStatusResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "sending",
+                  "delivered",
+                  "failed",
+                  "bounced",
+                  "rejected",
+                  "complained"
+                ],
+                "description": "Status email"
+              },
+              "sentAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Waktu pengiriman"
+              },
+              "deliveredAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Waktu pengiriman berhasil"
+              },
+              "failureReason": {
+                "type": "string",
+                "nullable": true,
+                "description": "Alasan kegagalan jika gagal"
+              },
+              "attempts": {
+                "type": "integer",
+                "description": "Jumlah percobaan pengiriman"
+              },
+              "provider": {
+                "type": "string",
+                "description": "Provider email yang digunakan"
+              },
+              "messageId": {
+                "type": "string",
+                "description": "ID message dari provider"
+              }
+            }
+          }
+        }
+      },
+      "TemplateRequest": {
+        "type": "object",
+        "required": ["name", "subject", "htmlContent"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nama unik untuk template"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Subjek email dengan placeholder"
+          },
+          "description": {
+            "type": "string",
+            "description": "Deskripsi template"
+          },
+          "htmlContent": {
+            "type": "string",
+            "description": "Konten HTML dengan placeholder"
+          },
+          "textContent": {
+            "type": "string",
+            "description": "Versi teks biasa"
+          },
+          "category": {
+            "type": "string",
+            "description": "Kategori untuk pengelompokan"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true,
+            "description": "Status template"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Metadata tambahan"
+          }
+        }
+      },
+      "TemplateResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID template"
+              },
+              "name": {
+                "type": "string",
+                "description": "Nama template"
+              },
+              "subject": {
+                "type": "string",
+                "description": "Subjek email"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Waktu pembuatan"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Waktu pembaruan terakhir"
+              }
+            }
+          }
+        }
+      },
+      "TemplatesListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "templates": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "ID template"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nama template"
+                    },
+                    "subject": {
+                      "type": "string",
+                      "description": "Subjek email"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Deskripsi template"
+                    },
+                    "category": {
+                      "type": "string",
+                      "description": "Kategori template"
+                    },
+                    "isActive": {
+                      "type": "boolean",
+                      "description": "Status template"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Waktu pembuatan"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Waktu pembaruan terakhir"
+                    }
+                  }
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "currentPage": {
+                    "type": "integer",
+                    "description": "Halaman saat ini"
+                  },
+                  "totalPages": {
+                    "type": "integer",
+                    "description": "Total halaman"
+                  },
+                  "totalItems": {
+                    "type": "integer",
+                    "description": "Total item"
+                  },
+                  "itemsPerPage": {
+                    "type": "integer",
+                    "description": "Jumlah item per halaman"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "TemplateDetailResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID template"
+              },
+              "name": {
+                "type": "string",
+                "description": "Nama template"
+              },
+              "subject": {
+                "type": "string",
+                "description": "Subjek email"
+              },
+              "description": {
+                "type": "string",
+                "description": "Deskripsi template"
+              },
+              "htmlContent": {
+                "type": "string",
+                "description": "Konten HTML"
+              },
+              "textContent": {
+                "type": "string",
+                "description": "Konten teks biasa"
+              },
+              "category": {
+                "type": "string",
+                "description": "Kategori template"
+              },
+              "isActive": {
+                "type": "boolean",
+                "description": "Status template"
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Metadata template"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Waktu pembuatan"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Waktu pembaruan terakhir"
+              }
+            }
+          }
+        }
+      },
+      "TemplateUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID template"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Waktu pembaruan"
+              }
+            }
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "null"
+          }
+        }
+      },
+      "TrackingEvent": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "sent",
+              "delivered",
+              "opened",
+              "clicked",
+              "bounced",
+              "complained",
+              "failed"
+            ],
+            "description": "Jenis event"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Waktu event"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Metadata event"
+          }
+        }
+      },
+      "TrackingResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "emailId": {
+                "type": "string",
+                "description": "ID email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "sending",
+                  "delivered",
+                  "failed",
+                  "bounced",
+                  "rejected",
+                  "complained"
+                ],
+                "description": "Status email"
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/TrackingEvent"
+                },
+                "description": "Daftar event tracking"
+              }
+            }
+          }
+        }
+      },
+      "TrackingStatsResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "stats": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer",
+                    "description": "Total email dikirim"
+                  },
+                  "delivered": {
+                    "type": "integer",
+                    "description": "Jumlah email terkirim"
+                  },
+                  "failed": {
+                    "type": "integer",
+                    "description": "Jumlah email gagal"
+                  },
+                  "opened": {
+                    "type": "integer",
+                    "description": "Jumlah email dibuka"
+                  },
+                  "clicked": {
+                    "type": "integer",
+                    "description": "Jumlah email dengan klik"
+                  },
+                  "bounced": {
+                    "type": "integer",
+                    "description": "Jumlah email di-bounce"
+                  },
+                  "complained": {
+                    "type": "integer",
+                    "description": "Jumlah email di-complaint"
+                  },
+                  "deliveryRate": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Persentase email terkirim"
+                  },
+                  "openRate": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Persentase email dibuka"
+                  },
+                  "clickRate": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Persentase email dengan klik"
+                  },
+                  "clickToOpenRate": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Persentase email yang dibuka dan diklik"
+                  }
+                }
+              },
+              "topLinks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "URL tautan"
+                    },
+                    "clicks": {
+                      "type": "integer",
+                      "description": "Jumlah klik"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "WebhookRequest": {
+        "type": "object",
+        "required": ["url", "events"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL untuk webhook"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "delivered",
+                "opened",
+                "clicked",
+                "bounced",
+                "complained"
+              ]
+            },
+            "description": "Jenis event yang ingin diterima"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Metadata untuk webhook"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Header HTTP tambahan"
+          }
+        }
+      },
+      "WebhookResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID webhook"
+              },
+              "secret": {
+                "type": "string",
+                "description": "Secret untuk verifikasi webhook"
+              }
+            }
+          }
+        }
+      },
+      "ApiKeyRequest": {
+        "type": "object",
+        "required": ["name", "permissions"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nama untuk API key"
+          },
+          "description": {
+            "type": "string",
+            "description": "Deskripsi API key"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["send_email", "manage_templates", "view_tracking"]
+            },
+            "description": "Permission untuk API key"
+          },
+          "rateLimits": {
+            "type": "object",
+            "properties": {
+              "maxRequestsPerMinute": {
+                "type": "integer",
+                "description": "Jumlah maksimum request per menit"
+              },
+              "maxEmailsPerDay": {
+                "type": "integer",
+                "description": "Jumlah maksimum email per hari"
+              }
+            },
+            "description": "Batas penggunaan"
+          },
+          "expiry": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Tanggal kedaluwarsa"
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Metadata tambahan"
+          }
+        }
+      },
+      "ApiKeyResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "ID API key"
+              },
+              "key": {
+                "type": "string",
+                "description": "API key value (hanya ditampilkan sekali)"
+              },
+              "name": {
+                "type": "string",
+                "description": "Nama API key"
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Permission API key"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Waktu pembuatan"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Waktu kedaluwarsa"
+              }
+            }
+          }
+        }
+      },
+      "ApiKeysListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["success"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "apiKeys": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "ID API key"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Nama API key"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Deskripsi API key"
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Permission API key"
+                    },
+                    "active": {
+                      "type": "boolean",
+                      "description": "Status API key"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Waktu pembuatan"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Waktu kedaluwarsa"
+                    },
+                    "lastUsedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Waktu penggunaan terakhir"
+                    }
+                  }
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "currentPage": {
+                    "type": "integer",
+                    "description": "Halaman saat ini"
+                  },
+                  "totalPages": {
+                    "type": "integer",
+                    "description": "Total halaman"
+                  },
+                  "totalItems": {
+                    "type": "integer",
+                    "description": "Total item"
+                  },
+                  "itemsPerPage": {
+                    "type": "integer",
+                    "description": "Jumlah item per halaman"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["error"]
+          },
+          "traceID": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "description": "Nama field yang error"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Deskripsi error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      },
+      "AdminTokenAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Admin-Token"
+      }
+    }
+  }
+}

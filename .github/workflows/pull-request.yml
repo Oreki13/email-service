@@ -1,0 +1,119 @@
+name: Pull Request Workflow
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: email_service_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+          - 15672:15672
+        options: >-
+          --health-cmd "rabbitmqctl status"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run unit tests
+        run: go test -v ./internal/... -coverprofile=coverage.out
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: email_service_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          RABBITMQ_HOST: localhost
+          RABBITMQ_PORT: 5672
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.out
+
+  code-vuln-scan:
+    name: Vulnerability Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+
+      - name: Run gosec Security Scanner
+        uses: securego/gosec@master
+        with:
+          args: ./...
+
+      - name: Run govulncheck
+        uses: golang/govulncheck-action@v1
+
+      - name: Check for dependencies vulnerabilities with nancy
+        run: |
+          go install github.com/sonatype-nexus-community/nancy@latest
+          go list -m all | grep -v golang.org/x/vuln | $HOME/go/bin/nancy sleuth
+
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.55
+          args: --timeout=5m --config=.golangci.yml

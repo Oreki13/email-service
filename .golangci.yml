@@ -1,0 +1,59 @@
+run:
+  timeout: 5m
+  skip-dirs:
+    - vendor
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - gosec
+    - goimports
+    - misspell
+    - revive
+    - bodyclose
+    - gocyclo
+    - dupl
+    - funlen
+    - godot
+    - godox
+    - gofmt
+    - maligned
+    - prealloc
+    - unconvert
+    - whitespace
+
+linters-settings:
+  gocyclo:
+    min-complexity: 15
+  funlen:
+    lines: 100
+    statements: 50
+  godot:
+    period: true
+  revive:
+    rules:
+      - name: var-naming
+        severity: warning
+        disabled: false
+      - name: exported
+        severity: warning
+        disabled: false
+      - name: package-comments
+        severity: warning
+        disabled: false
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - funlen
+        - dupl
+        - gosec
+  max-same-issues: 20
+  max-issues-per-linter: 100
