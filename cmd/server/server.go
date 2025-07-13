@@ -11,18 +11,21 @@ import (
 	"email-service/internal/queue"
 	"email-service/internal/repository"
 	"email-service/internal/service"
+	"email-service/internal/webui"
 	"email-service/pkg/cloudwatch"
 	"email-service/pkg/telemetry"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/template/html/v2"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -50,13 +53,13 @@ func RunServer(cfg *config.Config) {
 	}
 
 	// Initialize dependencies
-	emailService, mqAdapter, apiKeyRepo, templatedEmailService, logger, err := initializeServices(cfg, db)
+	emailService, mqAdapter, apiKeyRepo, templatedEmailService, dashboardService, templateRepo, logger, err := initializeServices(cfg, db)
 	if err != nil {
 		log.Fatalf("Failed to initialize services: %v", err)
 	}
 
 	// Initialize Fiber app
-	app := initializeFiberApp(cfg, emailService, apiKeyRepo, templatedEmailService, logger, redisClient, db)
+	app := initializeFiberApp(cfg, emailService, apiKeyRepo, templatedEmailService, dashboardService, templateRepo, logger, redisClient, db)
 
 	// Initialize email consumer jika RabbitMQ tersedia
 	var consumer *queue.EmailConsumer
@@ -87,12 +90,13 @@ func RunServer(cfg *config.Config) {
 }
 
 // initializeServices menginialisasi semua service yang diperlukan
-func initializeServices(cfg *config.Config, db *database.PostgresDB) (domain.EmailService, service.EmailQueueAdapter, domain.APIKeyRepository, domain.TemplatedEmailService, telemetry.Logger, error) {
+func initializeServices(cfg *config.Config, db *database.PostgresDB) (domain.EmailService, service.EmailQueueAdapter, domain.APIKeyRepository, domain.TemplatedEmailService, domain.DashboardService, domain.TemplateRepository, telemetry.Logger, error) {
 	// Initialize repositories
 	emailRepo := repository.NewSQLEmailRepository(db.GetDB())
 	templateRepo := repository.NewSQLTemplateRepository(db.GetDB())
 	apiKeyRepo := repository.NewSQLAPIKeyRepository(db.GetDB())
 	trackingRepo := repository.NewSQLEmailTrackingRepository(db.GetDB())
+	dashboardRepo := repository.NewSQLDashboardRepository(db.GetDB())
 
 	// Initialize telemetry/logger
 	var logger telemetry.Logger
@@ -112,14 +116,14 @@ func initializeServices(cfg *config.Config, db *database.PostgresDB) (domain.Ema
 
 		logger, err = cloudwatch.NewCloudWatchTelemetryLogger(cwConfig)
 		if err != nil {
-			return nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 	} else {
 		// Fallback ke logger default jika tidak ada konfigurasi AWS
 		var err error
 		logger, err = telemetry.NewDefaultLogger()
 		if err != nil {
-			return nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize default logger: %w", err)
+			return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize default logger: %w", err)
 		}
 	}
 
@@ -143,7 +147,7 @@ func initializeServices(cfg *config.Config, db *database.PostgresDB) (domain.Ema
 		}
 		emailDelivery = delivery.NewSESAdapter(sesConfig, logger)
 	default:
-		return nil, nil, nil, nil, nil, fmt.Errorf("unsupported email provider: %s", cfg.Email.DefaultProvider)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("unsupported email provider: %s", cfg.Email.DefaultProvider)
 	}
 
 	// Initialize email queue adapter
@@ -156,7 +160,7 @@ func initializeServices(cfg *config.Config, db *database.PostgresDB) (domain.Ema
 	}
 	queueAdapter, err := queue.NewRabbitMQAdapter(queueConfig, logger)
 	if err != nil {
-		return nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, err
 	}
 
 	// Initialize storage adapter untuk attachment
@@ -165,7 +169,7 @@ func initializeServices(cfg *config.Config, db *database.PostgresDB) (domain.Ema
 		logger.Error(context.Background(), "Failed to initialize storage adapter", telemetry.Fields{
 			"error": err.Error(),
 		})
-		return nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize storage adapter: %w", err)
+		return nil, nil, nil, nil, nil, nil, nil, fmt.Errorf("failed to initialize storage adapter: %w", err)
 	}
 
 	logger.Info(context.Background(), "Storage adapter initialized successfully", telemetry.Fields{
@@ -191,27 +195,71 @@ func initializeServices(cfg *config.Config, db *database.PostgresDB) (domain.Ema
 		logger,
 	)
 
-	// Inisialisasi template default jika diperlukan
-	go func() {
-		// Gunakan context background karena ini dilakukan di background
-		ctx := context.Background()
-		if serviceImpl, ok := templatedEmailSvc.(*service.TemplatedEmailServiceImpl); ok {
-			if err := serviceImpl.InitializeTemplates(ctx); err != nil {
-				logger.Error(ctx, "Gagal menginisialisasi template default", telemetry.Fields{
-					"error": err.Error(),
-				})
-			} else {
-				logger.Info(ctx, "Template default berhasil diinisialisasi", nil)
-			}
-		}
-	}()
+	// Initialize dashboard service
+	dashboardSvc := service.NewDashboardService(
+		dashboardRepo,
+		logger,
+	)
 
-	return emailSvc, queueAdapter, apiKeyRepo, templatedEmailSvc, logger, nil
+	// Inisialisasi template default jika diperlukan
+	// go func() {
+	// 	// Gunakan context background karena ini dilakukan di background
+	// 	ctx := context.Background()
+	// 	if serviceImpl, ok := templatedEmailSvc.(*service.TemplatedEmailServiceImpl); ok {
+	// 		if err := serviceImpl.InitializeTemplates(ctx); err != nil {
+	// 			logger.Error(ctx, "Gagal menginisialisasi template default", telemetry.Fields{
+	// 				"error": err.Error(),
+	// 			})
+	// 		} else {
+	// 			logger.Info(ctx, "Template default berhasil diinisialisasi", nil)
+	// 		}
+	// 	}
+	// }()
+
+	return emailSvc, queueAdapter, apiKeyRepo, templatedEmailSvc, dashboardSvc, templateRepo, logger, nil
 }
 
 // initializeFiberApp menginialisasi aplikasi Fiber
-func initializeFiberApp(cfg *config.Config, emailService domain.EmailService, apiKeyRepo domain.APIKeyRepository, templatedEmailService domain.TemplatedEmailService, logger telemetry.Logger, redisClient *database.RedisClient, db *database.PostgresDB) *fiber.App {
-	// Initialize Fiber app with timeouts
+func initializeFiberApp(cfg *config.Config, emailService domain.EmailService, apiKeyRepo domain.APIKeyRepository, templatedEmailService domain.TemplatedEmailService, dashboardService domain.DashboardService, templateRepo domain.TemplateRepository, logger telemetry.Logger, redisClient *database.RedisClient, db *database.PostgresDB) *fiber.App { // Initialize template engine
+	engine := html.New("./web/templates", ".html")
+
+	// Enable template reloading and debug mode for development environment
+	if cfg.App.Environment == "development" {
+		engine.Reload(true)
+		engine.Debug(true)
+	}
+
+	// Add custom template functions
+	engine.AddFunc("timeFormat", func(t time.Time, format string) string {
+		return t.Format(format)
+	})
+
+	// Add split function for template use
+	engine.AddFunc("split", func(s, sep string) []string {
+		if s == "" {
+			return []string{}
+		}
+		return strings.Split(s, sep)
+	})
+
+	// Add other useful template functions
+	engine.AddFunc("join", func(elems []string, sep string) string {
+		return strings.Join(elems, sep)
+	})
+
+	engine.AddFunc("contains", func(s, substr string) bool {
+		return strings.Contains(s, substr)
+	})
+
+	engine.AddFunc("toLower", func(s string) string {
+		return strings.ToLower(s)
+	})
+
+	engine.AddFunc("toUpper", func(s string) string {
+		return strings.ToUpper(s)
+	})
+
+	// Initialize Fiber app with timeouts and template engine
 	app := fiber.New(fiber.Config{
 		AppName:               "Email Microservice",
 		ErrorHandler:          handler.ErrorHandler,
@@ -221,6 +269,7 @@ func initializeFiberApp(cfg *config.Config, emailService domain.EmailService, ap
 		IdleTimeout:           120 * time.Second, // Waktu maksimum koneksi idle
 		ReadBufferSize:        4096,              // Ukuran buffer baca
 		WriteBufferSize:       4096,              // Ukuran buffer tulis
+		Views:                 engine,            // Set template engine
 	})
 
 	// Use middleware
@@ -288,6 +337,10 @@ func initializeFiberApp(cfg *config.Config, emailService domain.EmailService, ap
 	}
 	healthHandler := handler.NewHealthHandler(db.GetDB(), redisClientInstance, logger)
 	healthHandler.RegisterRoutes(app)
+
+	// Register Web UI routes
+	webuiHandler := webui.NewWebUIHandler(cfg, templatedEmailService, templateRepo, dashboardService, logger)
+	webuiHandler.RegisterRoutes(app)
 
 	return app
 }

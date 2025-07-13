@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: "#1e293b",
+                            400: "#60a5fa",
+                            500: "#3b82f6",
+                            600: "#2563eb",
+                            700: "#1d4ed8",
+                        },
+                        dark: {
+                            50: "#f8fafc",
+                            100: "#f1f5f9",
+                            200: "#e2e8f0",
+                            300: "#cbd5e1",
+                            400: "#94a3b8",
+                            500: "#64748b",
+                            600: "#475569",
+                            700: "#334155",
+                            800: "#1e293b",
+                            900: "#0f172a",
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-dark-900">
+    <!-- Navigation -->
+    <nav class="bg-primary-500 shadow-lg border-b border-dark-700">
+        <div class="mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/dashboard" class="flex items-center text-white font-bold text-xl">
+                        <i class="fas fa-envelope mr-3"></i>Email Service
+                    </a>
+                </div>
+                
+                <div class="flex items-center">
+                    <div class="relative group">
+                        <button class="flex items-center text-white hover:text-primary-100 focus:outline-none">
+                            <i class="fas fa-user mr-2"></i>{{.Username}}
+                            <i class="fas fa-chevron-down ml-2"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-dark-800 border border-dark-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                            <div class="py-1">
+                                <form method="POST" action="/logout" class="block">
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-gray-300 hover:bg-dark-700 flex items-center">
+                                        <i class="fas fa-sign-out-alt mr-3"></i>Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="bg-dark-800 shadow-lg w-64 min-h-screen border-r border-dark-700">
+            <nav class="mt-5">
+                <div class="px-4">
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="/dashboard" class="text-gray-300 hover:bg-dark-700 hover:text-white flex items-center px-4 py-3 text-sm font-medium rounded-lg">
+                                <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/templates" class="bg-primary-500/20 text-primary-400 border-r-4 border-primary-500 flex items-center px-4 py-3 text-sm font-medium rounded-l-lg">
+                                <i class="fas fa-file-alt mr-3"></i>Email Templates
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 p-8">
+            <div class="flex justify-between items-center mb-8">
+                <h1 class="text-3xl font-bold text-white">Email Templates</h1>
+                <a href="/templates/create" class="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center">
+                    <i class="fas fa-plus mr-2"></i>Create New Template
+                </a>
+            </div>
+
+            <!-- Search and Filter -->
+            <div class="bg-dark-800 rounded-xl shadow-sm border border-dark-700 p-6 mb-6">
+                <form method="GET" action="/templates" class="flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label for="search" class="block text-sm font-medium text-gray-300 mb-2">Search Templates</label>
+                        <input type="text" id="search" name="search" value="{{.Search}}" 
+                               placeholder="Search by name or description..." 
+                               class="w-full px-3 py-2 bg-dark-700 border border-dark-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                    </div>
+                    <div class="md:w-48">
+                        <label for="status" class="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                        <select id="status" name="status" class="w-full px-3 py-2 bg-dark-700 border border-dark-600 text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                            <option value="">All Status</option>
+                            <option value="active" {{if eq .Status "active"}}selected{{end}}>Active</option>
+                            <option value="inactive" {{if eq .Status "inactive"}}selected{{end}}>Inactive</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-200">
+                            <i class="fas fa-search mr-2"></i>Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Templates Table -->
+            <div class="bg-dark-800 rounded-xl shadow-sm border border-dark-700 overflow-hidden">
+                {{if .Templates}}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-dark-700">
+                        <thead class="bg-dark-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Template</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Created</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Updated</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-dark-800 divide-y divide-dark-700">
+                            {{range .Templates}}
+                            <tr class="hover:bg-dark-700">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div>
+                                        <div class="text-sm font-medium text-white">{{.Name}}</div>
+                                        <div class="text-sm text-gray-400">{{.Description}}</div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                                        {{.Type}}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {{if .IsActive}}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                                        <i class="fas fa-check-circle mr-1"></i>Active
+                                    </span>
+                                    {{else}}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
+                                        <i class="fas fa-times-circle mr-1"></i>Inactive
+                                    </span>
+                                    {{end}}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                                    {{.CreatedAt.Format "Jan 02, 2006"}}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                                    {{.UpdatedAt.Format "Jan 02, 2006"}}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex justify-end space-x-2">
+                                        <a href="/templates/{{.ID}}" class="text-primary-400 hover:text-primary-300" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="/templates/{{.ID}}/edit" class="text-yellow-400 hover:text-yellow-300" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button onclick="deleteTemplate('{{.ID}}', '{{.Name}}')" class="text-red-400 hover:text-red-300" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                {{if .Pagination}}
+                <div class="bg-dark-800 px-4 py-3 border-t border-dark-700 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            {{if .Pagination.HasPrev}}
+                            <a href="?page={{.Pagination.PrevPage}}" class="relative inline-flex items-center px-4 py-2 border border-dark-600 text-sm font-medium rounded-md text-gray-300 bg-dark-700 hover:bg-dark-600">
+                                Previous
+                            </a>
+                            {{end}}
+                            {{if .Pagination.HasNext}}
+                            <a href="?page={{.Pagination.NextPage}}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-dark-600 text-sm font-medium rounded-md text-gray-300 bg-dark-700 hover:bg-dark-600">
+                                Next
+                            </a>
+                            {{end}}
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-300">
+                                    Showing <span class="font-medium">{{.Pagination.From}}</span> to <span class="font-medium">{{.Pagination.To}}</span> of <span class="font-medium">{{.Pagination.Total}}</span> results
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                    {{if .Pagination.HasPrev}}
+                                    <a href="?page={{.Pagination.PrevPage}}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-dark-600 bg-dark-700 text-sm font-medium text-gray-400 hover:bg-dark-600">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                    {{end}}
+                                    
+                                    {{range .Pagination.Pages}}
+                                    {{if eq . $.Pagination.CurrentPage}}
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-primary-500 bg-primary-500/20 text-sm font-medium text-primary-400">
+                                        {{.}}
+                                    </span>
+                                    {{else}}
+                                    <a href="?page={{.}}" class="relative inline-flex items-center px-4 py-2 border border-dark-600 bg-dark-700 text-sm font-medium text-gray-300 hover:bg-dark-600">
+                                        {{.}}
+                                    </a>
+                                    {{end}}
+                                    {{end}}
+                                    
+                                    {{if .Pagination.HasNext}}
+                                    <a href="?page={{.Pagination.NextPage}}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-dark-600 bg-dark-700 text-sm font-medium text-gray-400 hover:bg-dark-600">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                    {{end}}
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{end}}
+
+                {{else}}
+                <div class="text-center py-12">
+                    <div class="w-24 h-24 mx-auto mb-4 text-gray-500">
+                        <i class="fas fa-file-alt text-6xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-2">No templates found</h3>
+                    <p class="text-gray-400 mb-6">Get started by creating your first email template.</p>
+                    <a href="/templates/create" class="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 inline-flex items-center">
+                        <i class="fas fa-plus mr-2"></i>Create New Template
+                    </a>
+                </div>
+                {{end}}
+            </div>
+        </main>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center z-50">
+        <div class="bg-dark-800 border border-dark-700 rounded-lg p-6 max-w-sm mx-auto">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-white">Delete Template</h3>
+                </div>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-400">Are you sure you want to delete template "<span id="templateName" class="text-white"></span>"? This action cannot be undone.</p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeDeleteModal()" class="bg-dark-700 hover:bg-dark-600 text-gray-300 border border-dark-600 font-semibold py-2 px-4 rounded-lg transition duration-200">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="POST" class="inline">
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function deleteTemplate(id, name) {
+            document.getElementById('templateName').textContent = name;
+            document.getElementById('deleteForm').action = '/templates/' + id + '/delete';
+            document.getElementById('deleteModal').classList.remove('hidden');
+            document.getElementById('deleteModal').classList.add('flex');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').classList.add('hidden');
+            document.getElementById('deleteModal').classList.remove('flex');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+    </script>
+</body>
+</html>

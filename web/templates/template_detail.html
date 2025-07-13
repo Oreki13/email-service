@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{.Title}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#1e293b",
+                400: "#60a5fa",
+                500: "#3b82f6",
+                600: "#2563eb",
+                700: "#1d4ed8",
+              },
+              dark: {
+                50: "#f8fafc",
+                100: "#f1f5f9",
+                200: "#e2e8f0",
+                300: "#cbd5e1",
+                400: "#94a3b8",
+                500: "#64748b",
+                600: "#475569",
+                700: "#334155",
+                800: "#1e293b",
+                900: "#0f172a",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body class="bg-dark-900">
+    <!-- Navigation -->
+    <nav class="bg-primary-500 shadow-lg border-b border-dark-700">
+      <div class="mx-auto px-4">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a
+              href="/dashboard"
+              class="flex items-center text-white font-bold text-xl"
+            >
+              <i class="fas fa-envelope mr-3 text-primary-400"></i>Email Service
+            </a>
+          </div>
+
+          <div class="flex items-center">
+            <div class="relative group">
+              <button
+                class="flex items-center text-gray-300 hover:text-white focus:outline-none"
+              >
+                <i class="fas fa-user mr-2"></i>{{.Username}}
+                <i class="fas fa-chevron-down ml-2"></i>
+              </button>
+              <div
+                class="absolute right-0 mt-2 w-48 bg-dark-700 rounded-lg shadow-lg border border-dark-600 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10"
+              >
+                <div class="py-1">
+                  <form method="POST" action="/logout" class="block">
+                    <button
+                      type="submit"
+                      class="w-full text-left px-4 py-2 text-gray-300 hover:bg-dark-600 hover:text-white flex items-center"
+                    >
+                      <i class="fas fa-sign-out-alt mr-3"></i>Logout
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="flex">
+      <!-- Sidebar -->
+      <aside
+        class="bg-dark-800 shadow-lg w-64 min-h-screen border-r border-dark-700"
+      >
+        <nav class="mt-5">
+          <div class="px-4">
+            <ul class="space-y-2">
+              <li>
+                <a
+                  href="/dashboard"
+                  class="text-gray-300 hover:bg-dark-700 hover:text-white flex items-center px-4 py-3 text-sm font-medium rounded-lg"
+                >
+                  <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/templates"
+                  class="bg-primary-500/20 text-primary-400 border-r-4 border-primary-500 flex items-center px-4 py-3 text-sm font-medium rounded-l-lg"
+                >
+                  <i class="fas fa-file-alt mr-3"></i>Email Templates
+                </a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Main content -->
+      <main class="flex-1 p-8">
+        <div class="mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center">
+              <a
+                href="/templates"
+                class="text-primary-400 hover:text-primary-300 mr-4"
+              >
+                <i class="fas fa-arrow-left"></i>
+              </a>
+              <div>
+                <h1 class="text-3xl font-bold text-white">
+                  {{.Template.Name}}
+                </h1>
+                <p class="text-gray-400 mt-1">{{.Template.Description}}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-3">
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                     {{if .Template.IsActive}}bg-green-800 text-green-200{{else}}bg-red-800 text-red-200{{end}}"
+              >
+                {{if .Template.IsActive}}Active{{else}}Inactive{{end}}
+              </span>
+              <span
+                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-800 text-blue-200"
+              >
+                {{.Template.Type}}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Template Actions -->
+        <div class="flex justify-end space-x-3 mb-6">
+          <button
+            onclick="sendTestEmail()"
+            class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+          >
+            <i class="fas fa-paper-plane mr-2"></i>Send Test Email
+          </button>
+          <a
+            href="/templates/{{.Template.ID}}/edit"
+            class="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+          >
+            <i class="fas fa-edit mr-2"></i>Edit Template
+          </a>
+          <button
+            onclick="confirmDelete()"
+            class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+          >
+            <i class="fas fa-trash mr-2"></i>Delete
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Template Details -->
+          <div class="lg:col-span-1">
+            <div
+              class="bg-dark-800 rounded-xl shadow-sm border border-dark-700 p-6"
+            >
+              <h3 class="text-lg font-semibold text-white mb-4">
+                Template Details
+              </h3>
+
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-400 mb-1"
+                    >Template ID</label
+                  >
+                  <p class="text-sm text-gray-300 font-mono">
+                    {{.Template.ID}}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-400 mb-1"
+                    >Type</label
+                  >
+                  <p class="text-sm text-gray-300">{{.Template.Type}}</p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-400 mb-1"
+                    >Status</label
+                  >
+                  <p class="text-sm text-gray-300">
+                    {{if .Template.IsActive}}Active{{else}}Inactive{{end}}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-400 mb-1"
+                    >Created</label
+                  >
+                  <p class="text-sm text-gray-300">
+                    {{.Template.CreatedAt.Format "Jan 02, 2006 at 3:04 PM"}}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-400 mb-1"
+                    >Last Updated</label
+                  >
+                  <p class="text-sm text-gray-300">
+                    {{.Template.UpdatedAt.Format "Jan 02, 2006 at 3:04 PM"}}
+                  </p>
+                </div>
+
+                {{if .Template.Variables}}
+                <div>
+                  <label class="block text-sm font-medium text-gray-400 mb-1"
+                    >Variables</label
+                  >
+                  <div class="flex flex-wrap gap-1">
+                    {{range $variable := split .Template.Variables ","}}
+                    <span
+                      class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-dark-700 text-gray-300"
+                    >
+                      {{.}}
+                    </span>
+                    {{end}}
+                  </div>
+                </div>
+                {{end}}
+              </div>
+            </div>
+          </div>
+
+          <!-- Template Content -->
+          <div class="lg:col-span-2">
+            <div
+              class="bg-dark-800 rounded-xl shadow-sm border border-dark-700"
+            >
+              <!-- Email Header -->
+              <div class="p-6 border-b border-dark-600">
+                <h3 class="text-lg font-semibold text-white mb-4">
+                  Email Preview
+                </h3>
+
+                <div class="space-y-3">
+                  {{if .Template.FromName}}
+                  <div class="flex">
+                    <span class="w-16 text-sm font-medium text-gray-400"
+                      >From:</span
+                    >
+                    <span class="text-sm text-gray-300"
+                      >{{.Template.FromName}} {{if
+                      .Template.FromEmail}}&lt;{{.Template.FromEmail}}&gt;{{end}}
+                    </span>
+                  </div>
+                  {{end}}
+
+                  <div class="flex">
+                    <span class="w-16 text-sm font-medium text-gray-400"
+                      >Subject:</span
+                    >
+                    <span class="text-sm text-gray-300"
+                      >{{.Template.Subject}}</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Content Tabs -->
+              <div class="border-b border-dark-600">
+                <nav class="-mb-px flex px-6">
+                  <button
+                    type="button"
+                    onclick="showTab('html')"
+                    id="html-tab"
+                    class="py-4 px-1 border-b-2 border-primary-500 font-medium text-sm text-primary-600 mr-8"
+                  >
+                    HTML Content
+                  </button>
+                  {{if .Template.BodyText}}
+                  <button
+                    type="button"
+                    onclick="showTab('text')"
+                    id="text-tab"
+                    class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-400 hover:text-gray-300 hover:border-gray-500"
+                  >
+                    Text Content
+                  </button>
+                  {{end}}
+                </nav>
+              </div>
+
+              <!-- HTML Content -->
+              <div id="html-content" class="p-6">
+                {{if .Template.BodyHTML}}
+                <div class="space-y-4">
+                  <!-- Preview Controls -->
+                  <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-3">
+                      <button
+                        onclick="toggleHtmlView('preview')"
+                        id="preview-btn"
+                        class="px-3 py-1 text-xs font-medium bg-primary-500 text-white rounded-lg transition duration-200"
+                      >
+                        <i class="fas fa-eye mr-1"></i>Preview
+                      </button>
+                      <button
+                        onclick="toggleHtmlView('code')"
+                        id="code-btn"
+                        class="px-3 py-1 text-xs font-medium bg-dark-600 text-gray-300 hover:bg-dark-500 rounded-lg transition duration-200"
+                      >
+                        <i class="fas fa-code mr-1"></i>Code
+                      </button>
+                    </div>
+                    <button
+                      onclick="openFullPreview()"
+                      class="text-primary-400 hover:text-primary-300 text-sm"
+                    >
+                      <i class="fas fa-external-link-alt mr-1"></i>Open in new
+                      window
+                    </button>
+                  </div>
+
+                  <!-- HTML Preview (Rendered) -->
+                  <div
+                    id="html-preview"
+                    class="border border-dark-600 rounded-lg"
+                  >
+                    <div
+                      class="bg-dark-700 px-4 py-2 border-b border-dark-600 flex justify-between items-center"
+                    >
+                      <span class="text-sm font-medium text-gray-300"
+                        >HTML Preview (Rendered)</span
+                      >
+                      <div class="flex items-center space-x-2">
+                        <button
+                          onclick="setPreviewWidth('100%')"
+                          id="desktop-preview"
+                          class="px-2 py-1 text-xs bg-primary-500 text-white rounded transition duration-200"
+                          title="Desktop View"
+                        >
+                          <i class="fas fa-desktop"></i>
+                        </button>
+                        <button
+                          onclick="setPreviewWidth('375px')"
+                          id="mobile-preview"
+                          class="px-2 py-1 text-xs bg-dark-600 text-gray-300 hover:bg-dark-500 rounded transition duration-200"
+                          title="Mobile View"
+                        >
+                          <i class="fas fa-mobile-alt"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="bg-white p-4 flex justify-center">
+                      <div
+                        id="preview-container"
+                        class="w-full transition-all duration-300"
+                      >
+                        <iframe
+                          id="previewHtmlFrame"
+                          class="w-full h-96 border border-gray-200 rounded"
+                          style="min-height: 400px"
+                        ></iframe>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- HTML Code (Raw) -->
+                  <div
+                    id="html-code"
+                    class="border border-dark-600 rounded-lg hidden"
+                  >
+                    <div class="bg-dark-700 px-4 py-2 border-b border-dark-600">
+                      <span class="text-sm font-medium text-gray-300"
+                        >HTML Source Code</span
+                      >
+                    </div>
+                    <div class="p-4 bg-dark-800 max-h-96 overflow-y-auto">
+                      <pre
+                        class="text-sm text-gray-300 font-mono whitespace-pre-wrap"
+                      >
+{{.Template.BodyHTML}}</pre
+                      >
+                    </div>
+                  </div>
+                </div>
+                {{else}}
+                <div class="text-center py-8">
+                  <i class="fas fa-code fa-3x text-gray-600 mb-3"></i>
+                  <p class="text-gray-400">No HTML content available</p>
+                </div>
+                {{end}}
+              </div>
+
+              <!-- Text Content -->
+              {{if .Template.BodyText}}
+              <div id="text-content" class="p-6 hidden">
+                <div class="border border-dark-600 rounded-lg">
+                  <div class="bg-dark-700 px-4 py-2 border-b border-dark-600">
+                    <span class="text-sm font-medium text-gray-300"
+                      >Text Preview</span
+                    >
+                  </div>
+                  <div class="p-4 bg-dark-800">
+                    <pre
+                      class="whitespace-pre-wrap text-sm text-gray-300 font-mono"
+                    >
+{{.Template.BodyText}}</pre
+                    >
+                  </div>
+                </div>
+              </div>
+              {{end}}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Send Test Email Modal -->
+    <div
+      id="testEmailModal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-dark-800 rounded-lg p-6 max-w-md mx-auto border border-dark-600"
+      >
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <i class="fas fa-paper-plane text-green-400 text-2xl"></i>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-lg font-medium text-white">Send Test Email</h3>
+          </div>
+        </div>
+        <form id="testEmailForm">
+          <div class="mb-4">
+            <label
+              for="test_email"
+              class="block text-sm font-medium text-gray-300 mb-2"
+              >Email Address</label
+            >
+            <input
+              type="email"
+              id="test_email"
+              name="test_email"
+              required
+              class="w-full px-3 py-2 bg-dark-700 border border-dark-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Enter email address..."
+            />
+          </div>
+          <div class="mb-4">
+            <label
+              for="test_variables"
+              class="block text-sm font-medium text-gray-300 mb-2"
+              >Test Variables (JSON)</label
+            >
+            <textarea
+              id="test_variables"
+              name="test_variables"
+              rows="4"
+              class="w-full px-3 py-2 bg-dark-700 border border-dark-600 text-white placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono text-sm"
+              placeholder='{"name": "John Doe", "email": "john@example.com"}'
+            ></textarea>
+            <p class="mt-1 text-xs text-gray-400">
+              Optional: Provide test data for template variables
+            </p>
+          </div>
+          <div class="flex justify-end space-x-3">
+            <button
+              type="button"
+              onclick="closeTestEmailModal()"
+              class="bg-dark-700 hover:bg-dark-600 text-gray-300 border border-dark-600 font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+              Send Test
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div
+      id="deleteModal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-dark-800 rounded-lg p-6 max-w-sm mx-auto border border-dark-600"
+      >
+        <div class="flex items-center mb-4">
+          <div class="flex-shrink-0">
+            <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-lg font-medium text-white">Delete Template</h3>
+          </div>
+        </div>
+        <div class="mb-4">
+          <p class="text-sm text-gray-400">
+            Are you sure you want to delete template "{{.Template.Name}}"? This
+            action cannot be undone.
+          </p>
+        </div>
+        <div class="flex justify-end space-x-3">
+          <button
+            onclick="closeDeleteModal()"
+            class="bg-dark-700 hover:bg-dark-600 text-gray-300 border border-dark-600 font-semibold py-2 px-4 rounded-lg transition duration-200"
+          >
+            Cancel
+          </button>
+          <form
+            method="POST"
+            action="/templates/{{.Template.ID}}/delete"
+            class="inline"
+          >
+            <button
+              type="submit"
+              class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+              Delete
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full Preview Modal -->
+    <div
+      id="fullPreviewModal"
+      class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden items-center justify-center z-50 p-4"
+    >
+      <div
+        class="bg-dark-800 rounded-lg max-w-6xl w-full max-h-[95vh] overflow-hidden border border-dark-600"
+      >
+        <div
+          class="flex justify-between items-center p-6 border-b border-dark-600"
+        >
+          <h3 class="text-lg font-semibold text-white">Full Email Preview</h3>
+          <button
+            onclick="closeFullPreviewModal()"
+            class="text-gray-400 hover:text-gray-300"
+          >
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+        <div class="p-6 overflow-y-auto max-h-[80vh]">
+          <iframe
+            id="previewFrame"
+            class="w-full h-full min-h-[75vh] bg-white border border-dark-600 rounded-lg"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function showTab(tab) {
+        // Hide all tabs
+        document.getElementById("html-content").classList.add("hidden");
+        const textContent = document.getElementById("text-content");
+        if (textContent) textContent.classList.add("hidden");
+
+        // Reset tab styles
+        document.getElementById("html-tab").className =
+          "py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-400 hover:text-gray-300 hover:border-gray-500 mr-8";
+        const textTab = document.getElementById("text-tab");
+        if (textTab)
+          textTab.className =
+            "py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-400 hover:text-gray-300 hover:border-gray-500";
+
+        // Show selected tab
+        document.getElementById(tab + "-content").classList.remove("hidden");
+        document.getElementById(tab + "-tab").className =
+          "py-4 px-1 border-b-2 border-primary-500 font-medium text-sm text-primary-600" +
+          (tab === "html" ? " mr-8" : "");
+
+        // Load HTML preview when HTML tab is shown
+        if (tab === "html") {
+          loadHtmlPreview();
+        }
+      }
+
+      function toggleHtmlView(view) {
+        const previewDiv = document.getElementById("html-preview");
+        const codeDiv = document.getElementById("html-code");
+        const previewBtn = document.getElementById("preview-btn");
+        const codeBtn = document.getElementById("code-btn");
+
+        if (view === "preview") {
+          previewDiv.classList.remove("hidden");
+          codeDiv.classList.add("hidden");
+
+          // Update button styles
+          previewBtn.className =
+            "px-3 py-1 text-xs font-medium bg-primary-500 text-white rounded-lg transition duration-200";
+          codeBtn.className =
+            "px-3 py-1 text-xs font-medium bg-dark-600 text-gray-300 hover:bg-dark-500 rounded-lg transition duration-200";
+
+          // Load HTML preview
+          loadHtmlPreview();
+        } else {
+          previewDiv.classList.add("hidden");
+          codeDiv.classList.remove("hidden");
+
+          // Update button styles
+          previewBtn.className =
+            "px-3 py-1 text-xs font-medium bg-dark-600 text-gray-300 hover:bg-dark-500 rounded-lg transition duration-200";
+          codeBtn.className =
+            "px-3 py-1 text-xs font-medium bg-primary-500 text-white rounded-lg transition duration-200";
+        }
+      }
+
+      // Helper function to decode HTML content
+      function decodeHtmlContent(content) {
+        // Create a temporary textarea element to decode HTML entities
+        const textarea = document.createElement("textarea");
+        textarea.innerHTML = content;
+        let decoded = textarea.value;
+
+        // Unescape Unicode sequences like \u003C to <
+        decoded = decoded.replace(
+          /\\u([0-9a-fA-F]{4})/g,
+          function (match, code) {
+            return String.fromCharCode(parseInt(code, 16));
+          }
+        );
+
+        // Unescape JSON escape sequences
+        decoded = decoded
+          .replace(/\\n/g, "\n")
+          .replace(/\\r/g, "\r")
+          .replace(/\\t/g, "\t")
+          .replace(/\\"/g, '"')
+          .replace(/\\'/g, "'")
+          .replace(/\\\\/g, "\\");
+
+        return decoded;
+      }
+
+      function loadHtmlPreview() {
+        const rawHtmlContent = `{{.Template.BodyHTML}}`;
+        const iframe = document.getElementById("previewHtmlFrame");
+
+        // Debug: Log the original content
+        console.log("Raw HTML Content:", rawHtmlContent);
+
+        if (rawHtmlContent && iframe) {
+          // Decode the HTML content
+          const decodedHTML = decodeHtmlContent(rawHtmlContent);
+
+          // Debug: Log the decoded content
+          console.log("Decoded HTML Content:", decodedHTML);
+
+          // If the decoded content still looks like escaped content, try alternative approach
+          let finalHTML = decodedHTML;
+          if (finalHTML.includes("\\u003C") || finalHTML.includes("&lt;")) {
+            // Try to parse as JSON string first
+            try {
+              finalHTML = JSON.parse(
+                '"' + rawHtmlContent.replace(/"/g, '\\"') + '"'
+              );
+            } catch (e) {
+              console.log("JSON parse failed, using regex approach");
+              finalHTML = rawHtmlContent
+                .replace(/\\u003C/g, "<")
+                .replace(/\\u003E/g, ">")
+                .replace(/\\u0026/g, "&")
+                .replace(/\\u0022/g, '"')
+                .replace(/\\u0027/g, "'")
+                .replace(/\\u000A/g, "\n")
+                .replace(/\\u000D/g, "\r")
+                .replace(/\\u0009/g, "\t");
+            }
+          }
+
+          console.log("Final HTML Content:", finalHTML);
+
+          // Create a complete HTML document for proper rendering
+          const fullHtmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Email Preview</title>
+              <style>
+                body {
+                  margin: 20px;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                  line-height: 1.6;
+                  color: #333;
+                  background-color: #fff;
+                }
+                img {
+                  max-width: 100%;
+                  height: auto;
+                }
+                table {
+                  border-collapse: collapse;
+                  width: 100%;
+                }
+                .email-container {
+                  max-width: 600px;
+                  margin: 0 auto;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="email-container">
+                ${finalHTML}
+              </div>
+            </body>
+            </html>
+          `;
+
+          iframe.srcdoc = fullHtmlContent;
+        }
+      }
+
+      function setPreviewWidth(width) {
+        const container = document.getElementById("preview-container");
+        const desktopBtn = document.getElementById("desktop-preview");
+        const mobileBtn = document.getElementById("mobile-preview");
+
+        if (container) {
+          container.style.width = width;
+          container.style.margin = width === "100%" ? "0" : "0 auto";
+        }
+
+        // Update button styles
+        if (width === "100%") {
+          desktopBtn.className =
+            "px-2 py-1 text-xs bg-primary-500 text-white rounded transition duration-200";
+          mobileBtn.className =
+            "px-2 py-1 text-xs bg-dark-600 text-gray-300 hover:bg-dark-500 rounded transition duration-200";
+        } else {
+          desktopBtn.className =
+            "px-2 py-1 text-xs bg-dark-600 text-gray-300 hover:bg-dark-500 rounded transition duration-200";
+          mobileBtn.className =
+            "px-2 py-1 text-xs bg-primary-500 text-white rounded transition duration-200";
+        }
+      }
+
+      function sendTestEmail() {
+        document.getElementById("testEmailModal").classList.remove("hidden");
+        document.getElementById("testEmailModal").classList.add("flex");
+      }
+
+      function closeTestEmailModal() {
+        document.getElementById("testEmailModal").classList.add("hidden");
+        document.getElementById("testEmailModal").classList.remove("flex");
+      }
+
+      function confirmDelete() {
+        document.getElementById("deleteModal").classList.remove("hidden");
+        document.getElementById("deleteModal").classList.add("flex");
+      }
+
+      function closeDeleteModal() {
+        document.getElementById("deleteModal").classList.add("hidden");
+        document.getElementById("deleteModal").classList.remove("flex");
+      }
+
+      function openFullPreview() {
+        const rawHtmlContent = `{{.Template.BodyHTML}}`;
+
+        if (rawHtmlContent) {
+          // Use the same decoding logic as loadHtmlPreview
+          const decodedHTML = decodeHtmlContent(rawHtmlContent);
+
+          // If the decoded content still looks like escaped content, try alternative approach
+          let finalHTML = decodedHTML;
+          if (finalHTML.includes("\\u003C") || finalHTML.includes("&lt;")) {
+            try {
+              finalHTML = JSON.parse(
+                '"' + rawHtmlContent.replace(/"/g, '\\"') + '"'
+              );
+            } catch (e) {
+              finalHTML = rawHtmlContent
+                .replace(/\\u003C/g, "<")
+                .replace(/\\u003E/g, ">")
+                .replace(/\\u0026/g, "&")
+                .replace(/\\u0022/g, '"')
+                .replace(/\\u0027/g, "'")
+                .replace(/\\u000A/g, "\n")
+                .replace(/\\u000D/g, "\r")
+                .replace(/\\u0009/g, "\t");
+            }
+          }
+
+          // Create full HTML document
+          const fullHtmlContent = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Email Preview - Full Screen</title>
+              <style>
+                body {
+                  margin: 20px;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+                  line-height: 1.6;
+                  color: #333;
+                  background-color: #fff;
+                }
+                img {
+                  max-width: 100%;
+                  height: auto;
+                }
+                table {
+                  border-collapse: collapse;
+                  width: 100%;
+                }
+                .email-container {
+                  max-width: 600px;
+                  margin: 0 auto;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="email-container">
+                ${finalHTML}
+              </div>
+            </body>
+            </html>
+          `;
+
+          const newWindow = window.open("", "_blank");
+          newWindow.document.write(fullHtmlContent);
+          newWindow.document.close();
+        }
+      }
+
+      function closeFullPreviewModal() {
+        document.getElementById("fullPreviewModal").classList.add("hidden");
+        document.getElementById("fullPreviewModal").classList.remove("flex");
+      }
+
+      // Handle test email form submission
+      document
+        .getElementById("testEmailForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const email = document.getElementById("test_email").value;
+          const variablesText = document.getElementById("test_variables").value;
+
+          // Parse variables JSON
+          let variables = {};
+          if (variablesText.trim()) {
+            try {
+              variables = JSON.parse(variablesText);
+            } catch (err) {
+              alert("Invalid JSON format in variables field");
+              return;
+            }
+          }
+
+          // Disable submit button and show loading
+          const submitButton = e.target.querySelector('button[type="submit"]');
+          const originalText = submitButton.textContent;
+          submitButton.disabled = true;
+          submitButton.textContent = "Sending...";
+
+          // Send AJAX request
+          fetch(`/templates/{{.Template.ID}}/test`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email: email,
+              variables: variables,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                alert("✅ " + data.message);
+                closeTestEmailModal();
+                // Reset form
+                document.getElementById("test_email").value = "";
+                document.getElementById("test_variables").value = "";
+              } else {
+                alert(
+                  "❌ Failed to send test email: " +
+                    (data.message || data.error)
+                );
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("❌ Error sending test email: " + error.message);
+            })
+            .finally(() => {
+              // Re-enable submit button
+              submitButton.disabled = false;
+              submitButton.textContent = originalText;
+            });
+        });
+
+      // Close modals when clicking outside
+      document
+        .getElementById("testEmailModal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) {
+            closeTestEmailModal();
+          }
+        });
+
+      document
+        .getElementById("deleteModal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) {
+            closeDeleteModal();
+          }
+        });
+
+      document
+        .getElementById("fullPreviewModal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) {
+            closeFullPreviewModal();
+          }
+        });
+
+      // Load initial view and show default tab
+      document.addEventListener("DOMContentLoaded", function () {
+        showTab("html");
+        // Load HTML preview by default
+        loadHtmlPreview();
+      });
+    </script>
+  </body>
+</html>

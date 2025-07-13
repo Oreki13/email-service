@@ -22,6 +22,7 @@ type Config struct {
 	AWS      AWSConfig      `mapstructure:"aws"`
 	App      AppConfig      `mapstructure:"app"`
 	Storage  StorageConfig  `mapstructure:"storage"`
+	WebUI    WebUIConfig    `mapstructure:"webui"`
 }
 
 // ServerConfig berisi konfigurasi server HTTP
@@ -93,6 +94,15 @@ type AWSSESConfig struct {
 type AuthConfig struct {
 	APIKeyHeaderName string `mapstructure:"api_key_header_name"`
 	AdminAPIToken    string `mapstructure:"admin_api_token"`
+}
+
+// WebUIConfig berisi konfigurasi untuk Web UI management
+type WebUIConfig struct {
+	Enabled         bool   `mapstructure:"enabled"`
+	Username        string `mapstructure:"username"`
+	Password        string `mapstructure:"password"`
+	SessionSecret   string `mapstructure:"session_secret"`
+	SessionDuration int    `mapstructure:"session_duration"` // dalam menit
 }
 
 // AWSConfig berisi konfigurasi AWS untuk CloudWatch
@@ -195,15 +205,15 @@ func LoadConfigWithOptions(options ConfigOptions) (*Config, error) {
 
 	// Ambil konfigurasi dari environment variables yang sudah dimuat
 	// Untuk database
-	v.Set("database.driver", getEnvOrDefault("DATABASE_DRIVER", v.GetString("database.driver")))
-	v.Set("database.host", getEnvOrDefault("DATABASE_HOST", v.GetString("database.host")))
-	v.Set("database.port", getEnvIntOrDefault("DATABASE_PORT", v.GetInt("database.port")))
-	v.Set("database.username", getEnvOrDefault("DATABASE_USERNAME", v.GetString("database.username")))
-	v.Set("database.password", getEnvOrDefault("DATABASE_PASSWORD", v.GetString("database.password")))
-	v.Set("database.name", getEnvOrDefault("DATABASE_NAME", v.GetString("database.name")))
-	v.Set("database.max_open_conns", getEnvIntOrDefault("DATABASE_MAX_OPEN_CONNS", v.GetInt("database.max_open_conns")))
-	v.Set("database.max_idle_conns", getEnvIntOrDefault("DATABASE_MAX_IDLE_CONNS", v.GetInt("database.max_idle_conns")))
-	v.Set("database.conn_max_lifetime", getEnvOrDefault("DATABASE_CONN_MAX_LIFETIME", v.GetString("database.conn_max_lifetime")))
+	v.Set("database.driver", getEnvOrDefault("DB_DRIVER", v.GetString("database.driver")))
+	v.Set("database.host", getEnvOrDefault("DB_HOST", v.GetString("database.host")))
+	v.Set("database.port", getEnvIntOrDefault("DB_PORT", v.GetInt("database.port")))
+	v.Set("database.username", getEnvOrDefault("DB_USERNAME", v.GetString("database.username")))
+	v.Set("database.password", getEnvOrDefault("DB_PASSWORD", v.GetString("database.password")))
+	v.Set("database.name", getEnvOrDefault("DB_NAME", v.GetString("database.name")))
+	v.Set("database.max_open_conns", getEnvIntOrDefault("DB_MAX_OPEN_CONNS", v.GetInt("database.max_open_conns")))
+	v.Set("database.max_idle_conns", getEnvIntOrDefault("DB_MAX_IDLE_CONNS", v.GetInt("database.max_idle_conns")))
+	v.Set("database.conn_max_lifetime", getEnvOrDefault("DB_CONN_MAX_LIFETIME", v.GetString("database.conn_max_lifetime")))
 
 	// Untuk server
 	v.Set("server.host", getEnvOrDefault("SERVER_HOST", v.GetString("server.host")))
@@ -380,6 +390,13 @@ func setDefaultValues(v *viper.Viper) {
 	v.SetDefault("storage.firebase.service_account_json", "")
 	v.SetDefault("storage.firebase.credentials_file", "")
 	v.SetDefault("storage.firebase.storage_path", "email-attachments")
+
+	// WebUI defaults
+	v.SetDefault("webui.enabled", true)
+	v.SetDefault("webui.username", "admin")
+	v.SetDefault("webui.password", "admin123")
+	v.SetDefault("webui.session_secret", "your-session-secret-key-change-this-in-production")
+	v.SetDefault("webui.session_duration", 480) // 8 jam dalam menit
 }
 
 // validateConfig memvalidasi konfigurasi

@@ -208,140 +208,140 @@ func (s *TemplatedEmailServiceImpl) GetTemplateInfo(ctx context.Context) (map[st
 }
 
 // InitializeTemplates inisialisasi template jika belum ada di database
-func (s *TemplatedEmailServiceImpl) InitializeTemplates(ctx context.Context) error {
-	s.logger.Info(ctx, "Menginisialisasi template email default", nil)
+// func (s *TemplatedEmailServiceImpl) InitializeTemplates(ctx context.Context) error {
+// 	s.logger.Info(ctx, "Menginisialisasi template email default", nil)
 
-	// Template Welcome Email
-	welcomeTemplate := &domain.Template{
-		ID:          s.templates["welcome"],
-		Name:        "Welcome Email",
-		Description: "Email untuk menyambut pengguna baru",
-		Subject:     "Selamat Datang di {{app_name}}",
-		HTMLBody: `
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<meta charset="utf-8">
-			<title>Selamat Datang</title>
-		</head>
-		<body>
-			<h1>Halo {{name}},</h1>
-			<p>Selamat datang di {{app_name}}! Kami senang Anda bergabung dengan kami.</p>
-			<p>Silakan gunakan platform kami untuk kebutuhan Anda.</p>
-			<p>Terima kasih,<br>Tim {{app_name}}</p>
-		</body>
-		</html>
-		`,
-		PlainBody: `
-		Halo {{name}},
-		
-		Selamat datang di {{app_name}}! Kami senang Anda bergabung dengan kami.
-		
-		Silakan gunakan platform kami untuk kebutuhan Anda.
-		
-		Terima kasih,
-		Tim {{app_name}}
-		`,
-	}
+// 	// Template Welcome Email
+// 	welcomeTemplate := &domain.Template{
+// 		ID:          s.templates["welcome"],
+// 		Name:        "Welcome Email",
+// 		Description: "Email untuk menyambut pengguna baru",
+// 		Subject:     "Selamat Datang di {{app_name}}",
+// 		HTMLBody: `
+// 		<!DOCTYPE html>
+// 		<html>
+// 		<head>
+// 			<meta charset="utf-8">
+// 			<title>Selamat Datang</title>
+// 		</head>
+// 		<body>
+// 			<h1>Halo {{name}},</h1>
+// 			<p>Selamat datang di {{app_name}}! Kami senang Anda bergabung dengan kami.</p>
+// 			<p>Silakan gunakan platform kami untuk kebutuhan Anda.</p>
+// 			<p>Terima kasih,<br>Tim {{app_name}}</p>
+// 		</body>
+// 		</html>
+// 		`,
+// 		PlainBody: `
+// 		Halo {{name}},
 
-	// Template Reset Password
-	resetPasswordTemplate := &domain.Template{
-		ID:          s.templates["reset-password"],
-		Name:        "Reset Password",
-		Description: "Email untuk reset password",
-		Subject:     "Reset Password untuk {{app_name}}",
-		HTMLBody: `
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<meta charset="utf-8">
-			<title>Reset Password</title>
-		</head>
-		<body>
-			<h1>Halo {{name}},</h1>
-			<p>Kami menerima permintaan untuk mereset password Anda di {{app_name}}.</p>
-			<p>Silakan klik link berikut untuk melanjutkan proses reset password:</p>
-			<p><a href="{{reset_url}}">Reset Password</a></p>
-			<p>Link ini akan kedaluwarsa dalam {{expires_in}} jam.</p>
-			<p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
-			<p>Terima kasih,<br>Tim {{app_name}}</p>
-		</body>
-		</html>
-		`,
-		PlainBody: `
-		Halo {{name}},
-		
-		Kami menerima permintaan untuk mereset password Anda di {{app_name}}.
-		
-		Silakan kunjungi link berikut untuk melanjutkan proses reset password:
-		{{reset_url}}
-		
-		Link ini akan kedaluwarsa dalam {{expires_in}} jam.
-		
-		Jika Anda tidak meminta reset password, abaikan email ini.
-		
-		Terima kasih,
-		Tim {{app_name}}
-		`,
-	}
+// 		Selamat datang di {{app_name}}! Kami senang Anda bergabung dengan kami.
 
-	// Template Notification
-	notificationTemplate := &domain.Template{
-		ID:          s.templates["notification"],
-		Name:        "Notification",
-		Description: "Email notifikasi umum",
-		Subject:     "{{subject}}",
-		HTMLBody: `
-		<!DOCTYPE html>
-		<html>
-		<head>
-			<meta charset="utf-8">
-			<title>{{subject}}</title>
-		</head>
-		<body>
-			<p>{{message}}</p>
-			<p>Terima kasih,<br>Tim {{app_name}}</p>
-		</body>
-		</html>
-		`,
-		PlainBody: `
-		{{message}}
-		
-		Terima kasih,
-		Tim {{app_name}}
-		`,
-	}
+// 		Silakan gunakan platform kami untuk kebutuhan Anda.
 
-	// Simpan template ke repository jika belum ada
-	templates := []*domain.Template{welcomeTemplate, resetPasswordTemplate, notificationTemplate}
+// 		Terima kasih,
+// 		Tim {{app_name}}
+// 		`,
+// 	}
 
-	for _, template := range templates {
-		existingTemplate, err := s.templateRepo.FindByID(ctx, template.ID)
-		if err != nil {
-			s.logger.Error(ctx, "Gagal memeriksa template", telemetry.Fields{
-				"template_id": template.ID,
-				"error":       err.Error(),
-			})
-			return err
-		}
+// 	// Template Reset Password
+// 	resetPasswordTemplate := &domain.Template{
+// 		ID:          s.templates["reset-password"],
+// 		Name:        "Reset Password",
+// 		Description: "Email untuk reset password",
+// 		Subject:     "Reset Password untuk {{app_name}}",
+// 		HTMLBody: `
+// 		<!DOCTYPE html>
+// 		<html>
+// 		<head>
+// 			<meta charset="utf-8">
+// 			<title>Reset Password</title>
+// 		</head>
+// 		<body>
+// 			<h1>Halo {{name}},</h1>
+// 			<p>Kami menerima permintaan untuk mereset password Anda di {{app_name}}.</p>
+// 			<p>Silakan klik link berikut untuk melanjutkan proses reset password:</p>
+// 			<p><a href="{{reset_url}}">Reset Password</a></p>
+// 			<p>Link ini akan kedaluwarsa dalam {{expires_in}} jam.</p>
+// 			<p>Jika Anda tidak meminta reset password, abaikan email ini.</p>
+// 			<p>Terima kasih,<br>Tim {{app_name}}</p>
+// 		</body>
+// 		</html>
+// 		`,
+// 		PlainBody: `
+// 		Halo {{name}},
 
-		// Jika template belum ada, simpan template baru
-		if existingTemplate == nil {
-			if err := s.templateRepo.Save(ctx, template); err != nil {
-				s.logger.Error(ctx, "Gagal menyimpan template", telemetry.Fields{
-					"template_id":   template.ID,
-					"template_name": template.Name,
-					"error":         err.Error(),
-				})
-				return err
-			}
-			s.logger.Info(ctx, "Template berhasil dibuat", telemetry.Fields{
-				"template_id":   template.ID,
-				"template_name": template.Name,
-			})
-		}
-	}
+// 		Kami menerima permintaan untuk mereset password Anda di {{app_name}}.
 
-	s.logger.Info(ctx, "Inisialisasi template selesai", nil)
-	return nil
-}
+// 		Silakan kunjungi link berikut untuk melanjutkan proses reset password:
+// 		{{reset_url}}
+
+// 		Link ini akan kedaluwarsa dalam {{expires_in}} jam.
+
+// 		Jika Anda tidak meminta reset password, abaikan email ini.
+
+// 		Terima kasih,
+// 		Tim {{app_name}}
+// 		`,
+// 	}
+
+// 	// Template Notification
+// 	notificationTemplate := &domain.Template{
+// 		ID:          s.templates["notification"],
+// 		Name:        "Notification",
+// 		Description: "Email notifikasi umum",
+// 		Subject:     "{{subject}}",
+// 		HTMLBody: `
+// 		<!DOCTYPE html>
+// 		<html>
+// 		<head>
+// 			<meta charset="utf-8">
+// 			<title>{{subject}}</title>
+// 		</head>
+// 		<body>
+// 			<p>{{message}}</p>
+// 			<p>Terima kasih,<br>Tim {{app_name}}</p>
+// 		</body>
+// 		</html>
+// 		`,
+// 		PlainBody: `
+// 		{{message}}
+
+// 		Terima kasih,
+// 		Tim {{app_name}}
+// 		`,
+// 	}
+
+// 	// Simpan template ke repository jika belum ada
+// 	templates := []*domain.Template{welcomeTemplate, resetPasswordTemplate, notificationTemplate}
+
+// 	for _, template := range templates {
+// 		existingTemplate, err := s.templateRepo.FindByID(ctx, template.ID)
+// 		if err != nil {
+// 			s.logger.Error(ctx, "Gagal memeriksa template", telemetry.Fields{
+// 				"template_id": template.ID,
+// 				"error":       err.Error(),
+// 			})
+// 			return err
+// 		}
+
+// 		// Jika template belum ada, simpan template baru
+// 		if existingTemplate == nil {
+// 			if err := s.templateRepo.Save(ctx, template); err != nil {
+// 				s.logger.Error(ctx, "Gagal menyimpan template", telemetry.Fields{
+// 					"template_id":   template.ID,
+// 					"template_name": template.Name,
+// 					"error":         err.Error(),
+// 				})
+// 				return err
+// 			}
+// 			s.logger.Info(ctx, "Template berhasil dibuat", telemetry.Fields{
+// 				"template_id":   template.ID,
+// 				"template_name": template.Name,
+// 			})
+// 		}
+// 	}
+
+// 	s.logger.Info(ctx, "Inisialisasi template selesai", nil)
+// 	return nil
+// }
