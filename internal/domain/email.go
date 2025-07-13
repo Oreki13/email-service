@@ -155,18 +155,22 @@ type TemplateRepository interface {
 	Save(ctx context.Context, template *Template) error
 	Delete(ctx context.Context, id string) error
 	FindAll(ctx context.Context) ([]*Template, error)
+	FindWithPagination(ctx context.Context, limit, offset int, search, status string) ([]*Template, int64, error)
 }
 
 // Template merepresentasikan template email
 type Template struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	Subject     string    `json:"subject"`
-	PlainBody   string    `json:"plainBody"`
-	HTMLBody    string    `json:"htmlBody"`
-	CreatedAt   time.Time `json:"createdAt"`
-	UpdatedAt   time.Time `json:"updatedAt"`
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Subject     string                 `json:"subject"`
+	PlainBody   string                 `json:"plainBody"`
+	HTMLBody    string                 `json:"htmlBody"`
+	Variables   map[string]interface{} `json:"variables,omitempty"`
+	IsActive    bool                   `json:"isActive"`
+	Version     int                    `json:"version"`
+	CreatedAt   time.Time              `json:"createdAt"`
+	UpdatedAt   time.Time              `json:"updatedAt"`
 }
 
 // TemplateRequest merepresentasikan request untuk membuat template

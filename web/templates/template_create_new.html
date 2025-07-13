@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-primary-500 shadow-lg">
+        <div class="mx-auto px-4">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/dashboard" class="flex items-center text-white font-bold text-xl">
+                        <i class="fas fa-envelope mr-3"></i>Email Service
+                    </a>
+                </div>
+                
+                <div class="flex items-center">
+                    <div class="relative group">
+                        <button class="flex items-center text-white hover:text-primary-50 focus:outline-none">
+                            <i class="fas fa-user mr-2"></i>{{.Username}}
+                            <i class="fas fa-chevron-down ml-2"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                            <div class="py-1">
+                                <form method="POST" action="/logout" class="block">
+                                    <button type="submit" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 flex items-center">
+                                        <i class="fas fa-sign-out-alt mr-3"></i>Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <aside class="bg-white shadow-lg w-64 min-h-screen">
+            <nav class="mt-5">
+                <div class="px-4">
+                    <ul class="space-y-2">
+                        <li>
+                            <a href="/dashboard" class="text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center px-4 py-3 text-sm font-medium rounded-lg">
+                                <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/templates" class="bg-primary-50 text-primary-700 border-r-4 border-primary-500 flex items-center px-4 py-3 text-sm font-medium rounded-l-lg">
+                                <i class="fas fa-file-alt mr-3"></i>Email Templates
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main content -->
+        <main class="flex-1 p-8">
+            <div class="mb-8">
+                <div class="flex items-center mb-6">
+                    <a href="/templates" class="text-primary-600 hover:text-primary-800 mr-4">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <h1 class="text-3xl font-bold text-gray-900">Create New Template</h1>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <form method="POST" action="/templates/create" class="p-8">
+                    <!-- Template Basic Info -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div>
+                            <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Template Name *</label>
+                            <input type="text" id="name" name="name" value="{{.Form.Name}}" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
+                                          {{if .Errors.Name}}border-red-500{{end}}">
+                            {{if .Errors.Name}}
+                            <p class="mt-1 text-sm text-red-600">{{.Errors.Name}}</p>
+                            {{end}}
+                        </div>
+
+                        <div>
+                            <label for="type" class="block text-sm font-medium text-gray-700 mb-2">Template Type *</label>
+                            <select id="type" name="type" required 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <option value="">Select Type</option>
+                                <option value="welcome" {{if eq .Form.Type "welcome"}}selected{{end}}>Welcome</option>
+                                <option value="notification" {{if eq .Form.Type "notification"}}selected{{end}}>Notification</option>
+                                <option value="newsletter" {{if eq .Form.Type "newsletter"}}selected{{end}}>Newsletter</option>
+                                <option value="promotional" {{if eq .Form.Type "promotional"}}selected{{end}}>Promotional</option>
+                                <option value="transactional" {{if eq .Form.Type "transactional"}}selected{{end}}>Transactional</option>
+                                <option value="other" {{if eq .Form.Type "other"}}selected{{end}}>Other</option>
+                            </select>
+                            {{if .Errors.Type}}
+                            <p class="mt-1 text-sm text-red-600">{{.Errors.Type}}</p>
+                            {{end}}
+                        </div>
+                    </div>
+
+                    <div class="mb-8">
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea id="description" name="description" rows="3" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                  placeholder="Brief description of this template...">{{.Form.Description}}</textarea>
+                        {{if .Errors.Description}}
+                        <p class="mt-1 text-sm text-red-600">{{.Errors.Description}}</p>
+                        {{end}}
+                    </div>
+
+                    <!-- Email Content -->
+                    <div class="border-t border-gray-200 pt-8 mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Email Content</h3>
+
+                        <div class="mb-6">
+                            <label for="subject" class="block text-sm font-medium text-gray-700 mb-2">Email Subject *</label>
+                            <input type="text" id="subject" name="subject" value="{{.Form.Subject}}" required 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 
+                                          {{if .Errors.Subject}}border-red-500{{end}}"
+                                   placeholder="Enter email subject...">
+                            {{if .Errors.Subject}}
+                            <p class="mt-1 text-sm text-red-600">{{.Errors.Subject}}</p>
+                            {{end}}
+                        </div>
+
+                        <div class="mb-6">
+                            <label for="from_name" class="block text-sm font-medium text-gray-700 mb-2">From Name</label>
+                            <input type="text" id="from_name" name="from_name" value="{{.Form.FromName}}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                   placeholder="Sender name (optional)">
+                            {{if .Errors.FromName}}
+                            <p class="mt-1 text-sm text-red-600">{{.Errors.FromName}}</p>
+                            {{end}}
+                        </div>
+
+                        <div class="mb-6">
+                            <label for="from_email" class="block text-sm font-medium text-gray-700 mb-2">From Email</label>
+                            <input type="email" id="from_email" name="from_email" value="{{.Form.FromEmail}}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                   placeholder="sender@example.com (optional)">
+                            {{if .Errors.FromEmail}}
+                            <p class="mt-1 text-sm text-red-600">{{.Errors.FromEmail}}</p>
+                            {{end}}
+                        </div>
+
+                        <!-- Content Format Tabs -->
+                        <div class="mb-6">
+                            <div class="border-b border-gray-200">
+                                <nav class="-mb-px flex space-x-8">
+                                    <button type="button" onclick="showTab('html')" id="html-tab" 
+                                            class="py-2 px-1 border-b-2 border-primary-500 font-medium text-sm text-primary-600">
+                                        HTML Content
+                                    </button>
+                                    <button type="button" onclick="showTab('text')" id="text-tab" 
+                                            class="py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                                        Text Content
+                                    </button>
+                                </nav>
+                            </div>
+
+                            <div id="html-content" class="mt-6">
+                                <label for="body_html" class="block text-sm font-medium text-gray-700 mb-2">HTML Content *</label>
+                                <textarea id="body_html" name="body_html" rows="15" required 
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono text-sm 
+                                                 {{if .Errors.BodyHTML}}border-red-500{{end}}"
+                                          placeholder="Enter HTML content...">{{.Form.BodyHTML}}</textarea>
+                                {{if .Errors.BodyHTML}}
+                                <p class="mt-1 text-sm text-red-600">{{.Errors.BodyHTML}}</p>
+                                {{end}}
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    You can use variables like {{`{{.Name}}, {{.Email}}, {{.CompanyName}}`}} in your content.
+                                </div>
+                            </div>
+
+                            <div id="text-content" class="mt-6 hidden">
+                                <label for="body_text" class="block text-sm font-medium text-gray-700 mb-2">Text Content</label>
+                                <textarea id="body_text" name="body_text" rows="15" 
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-mono text-sm"
+                                          placeholder="Enter plain text content...">{{.Form.BodyText}}</textarea>
+                                {{if .Errors.BodyText}}
+                                <p class="mt-1 text-sm text-red-600">{{.Errors.BodyText}}</p>
+                                {{end}}
+                                <div class="mt-2 flex items-center text-sm text-gray-500">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Fallback text version for email clients that don't support HTML.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template Settings -->
+                    <div class="border-t border-gray-200 pt-8 mb-8">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-6">Template Settings</h3>
+
+                        <div class="flex items-center mb-6">
+                            <input type="checkbox" id="is_active" name="is_active" value="true" 
+                                   {{if .Form.IsActive}}checked{{end}}
+                                   class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                            <label for="is_active" class="ml-2 block text-sm text-gray-700">
+                                Activate this template immediately
+                            </label>
+                        </div>
+
+                        <div class="mb-6">
+                            <label for="variables" class="block text-sm font-medium text-gray-700 mb-2">Template Variables</label>
+                            <input type="text" id="variables" name="variables" value="{{.Form.Variables}}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                   placeholder="name,email,company (comma-separated)">
+                            <div class="mt-2 flex items-center text-sm text-gray-500">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                List the variables used in this template (comma-separated).
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+                        <a href="/templates" class="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 font-semibold py-2 px-6 rounded-lg transition duration-200">
+                            Cancel
+                        </a>
+                        <button type="button" onclick="previewTemplate()" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200">
+                            <i class="fas fa-eye mr-2"></i>Preview
+                        </button>
+                        <button type="submit" class="bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-6 rounded-lg transition duration-200">
+                            <i class="fas fa-save mr-2"></i>Create Template
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Template Preview</h3>
+                <button onclick="closePreviewModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[70vh]">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subject:</label>
+                    <div id="preview-subject" class="text-lg font-semibold text-gray-900 p-3 bg-gray-50 rounded-lg"></div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Content:</label>
+                    <div id="preview-content" class="border border-gray-300 rounded-lg p-4 bg-white"></div>
+                </div>
+            </div>
+            <div class="flex justify-end p-6 border-t border-gray-200">
+                <button onclick="closePreviewModal()" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tab) {
+            // Hide all tabs
+            document.getElementById('html-content').classList.add('hidden');
+            document.getElementById('text-content').classList.add('hidden');
+
+            // Reset tab styles
+            document.getElementById('html-tab').className = 'py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+            document.getElementById('text-tab').className = 'py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300';
+
+            // Show selected tab
+            document.getElementById(tab + '-content').classList.remove('hidden');
+            document.getElementById(tab + '-tab').className = 'py-2 px-1 border-b-2 border-primary-500 font-medium text-sm text-primary-600';
+        }
+
+        function previewTemplate() {
+            const subject = document.getElementById('subject').value;
+            const htmlContent = document.getElementById('body_html').value;
+            const textContent = document.getElementById('body_text').value;
+
+            document.getElementById('preview-subject').textContent = subject || 'No subject';
+            
+            if (htmlContent) {
+                document.getElementById('preview-content').innerHTML = htmlContent;
+            } else if (textContent) {
+                document.getElementById('preview-content').innerHTML = '<pre class="whitespace-pre-wrap font-mono text-sm">' + textContent + '</pre>';
+            } else {
+                document.getElementById('preview-content').innerHTML = '<p class="text-gray-500">No content to preview</p>';
+            }
+
+            document.getElementById('previewModal').classList.remove('hidden');
+            document.getElementById('previewModal').classList.add('flex');
+        }
+
+        function closePreviewModal() {
+            document.getElementById('previewModal').classList.add('hidden');
+            document.getElementById('previewModal').classList.remove('flex');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('previewModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePreviewModal();
+            }
+        });
+    </script>
+</body>
+</html>

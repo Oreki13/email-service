@@ -134,6 +134,8 @@ run:
 dev:
 	@echo "Mengecek air (hot reload)..."
 	@which air > /dev/null || (echo "Installing air for hot reload..." && go install github.com/air-verse/air@latest)
+	@echo "Memastikan direktori tmp tersedia..."
+	@$(MKDIR) tmp 2>/dev/null || true
 	@echo "Menjalankan dengan hot reload..."
 	@air -c .air.toml
 
@@ -147,21 +149,45 @@ dev-setup: setup-env setup-deps
 		tmp_dir = "tmp"\n\
 		\n\
 		[build]\n\
-		cmd = "go build -o ./tmp/main ."\n\
-		bin = "tmp/main server"\n\
-		include_ext = ["go", "tpl", "tmpl", "html"]\n\
-		exclude_dir = ["assets", "tmp", "vendor", "build", "storage"]\n\
-		delay = 1000\n\
+		  args_bin = ["server"]\n\
+		  bin = "./tmp/main"\n\
+		  cmd = "go build -o ./tmp/main ."\n\
+		  delay = 1000\n\
+		  exclude_dir = ["assets", "tmp", "vendor", "build", "storage"]\n\
+		  exclude_file = []\n\
+		  exclude_regex = ["_test.go"]\n\
+		  exclude_unchanged = false\n\
+		  follow_symlink = false\n\
+		  full_bin = ""\n\
+		  include_dir = []\n\
+		  include_ext = ["go", "tpl", "tmpl", "html"]\n\
+		  include_file = []\n\
+		  kill_delay = "0s"\n\
+		  log = "build-errors.log"\n\
+		  poll = false\n\
+		  poll_interval = 0\n\
+		  rerun = false\n\
+		  rerun_delay = 500\n\
+		  send_interrupt = false\n\
+		  stop_on_root = false\n\
+		\n\
+		[color]\n\
+		  app = ""\n\
+		  build = "yellow"\n\
+		  main = "magenta"\n\
+		  runner = "green"\n\
+		  watcher = "cyan"\n\
 		\n\
 		[log]\n\
-		time = true\n\
+		  main_only = false\n\
+		  time = true\n\
 		\n\
 		[misc]\n\
-		clean_on_exit = true\n\
+		  clean_on_exit = true\n\
 		\n\
 		[screen]\n\
-		clear_on_rebuild = true\n\
-		keep_scroll = true\n\
+		  clear_on_rebuild = true\n\
+		  keep_scroll = true\n\
 		' > .air.toml)
 	@echo "Menginstal Air untuk hot reload..."
 	@go install github.com/air-verse/air@latest
@@ -261,6 +287,7 @@ clean:
 	@echo "Membersihkan build artifacts..."
 	@$(RM) $(BUILD_DIR)/$(APP_NAME)
 	@$(RM) coverage.out coverage.html
+	@$(RM) -r tmp/ 2>/dev/null || true
 	@echo "Pembersihan selesai."
 
 # Generate mock untuk testing

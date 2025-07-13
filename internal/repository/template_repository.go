@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"email-service/internal/domain"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,7 +29,7 @@ func (r *SQLTemplateRepository) FindByID(ctx context.Context, id string) (*domai
 	query := `
 	SELECT 
 		id, name, description, subject, plain_body, html_body, 
-		variables, created_at, updated_at
+		variables, is_active, version, created_at, updated_at
 	FROM email_templates
 	WHERE id = $1 AND is_active = TRUE
 	`
@@ -37,8 +39,8 @@ func (r *SQLTemplateRepository) FindByID(ctx context.Context, id string) (*domai
 
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&template.ID, &template.Name, &template.Description, &template.Subject,
-		&template.PlainBody, &template.HTMLBody, &variablesJSON, &template.CreatedAt,
-		&template.UpdatedAt,
+		&template.PlainBody, &template.HTMLBody, &variablesJSON, &template.IsActive,
+		&template.Version, &template.CreatedAt, &template.UpdatedAt,
 	)
 
 	if err == sql.ErrNoRows {
@@ -46,32 +48,33 @@ func (r *SQLTemplateRepository) FindByID(ctx context.Context, id string) (*domai
 	}
 
 	if err != nil {
-		return nil, domain.DatabaseError("Failed to find template", err)
+		return nil, domain.DatabaseError("Failed to query template by ID", err)
 	}
 
-	// Unmarshal variables jika ada
-	if len(variablesJSON) > 0 {
-		var variables []string
-		if err = json.Unmarshal(variablesJSON, &variables); err != nil {
-			return nil, domain.DatabaseError("Failed to unmarshal variables", err)
-		}
-		// Tambahkan ke domain.Template jika diperlukan
-		// (Tidak ada dalam definisi template saat ini, mungkin perlu ditambahkan)
+	// Parse JSON variables using helper function
+	variables, err := r.parseVariables(variablesJSON)
+	if err != nil {
+		return nil, domain.DatabaseError("Failed to unmarshal template variables", err)
 	}
+	template.Variables = variables
 
 	return &template, nil
 }
 
 // Save menyimpan template baru atau memperbarui yang sudah ada
 func (r *SQLTemplateRepository) Save(ctx context.Context, template *domain.Template) error {
-	var variables []string // Daftar variabel yang digunakan dalam template
+	// Marshal variables sebagai map[string]interface{} untuk konsistensi
+	var variablesJSON []byte
+	var err error
 
-	// Seharusnya mengekstrak variabel dari template menggunakan regex
-	// Misalnya mencari pola {{variable}} dalam konten template
-	// Ini hanya contoh sederhana
-	variablesJSON, err := json.Marshal(variables)
-	if err != nil {
-		return domain.DatabaseError("Failed to marshal variables", err)
+	if len(template.Variables) > 0 {
+		variablesJSON, err = json.Marshal(template.Variables)
+		if err != nil {
+			return domain.DatabaseError("Failed to marshal variables", err)
+		}
+	} else {
+		// Jika tidak ada variables, simpan sebagai empty object
+		variablesJSON = []byte("{}")
 	}
 
 	// Cek apakah template sudah ada (update) atau baru (insert)
@@ -189,6 +192,13 @@ func (r *SQLTemplateRepository) FindAll(ctx context.Context) ([]*domain.Template
 			return nil, domain.DatabaseError("Failed to scan template", err)
 		}
 
+		// Parse JSON variables using helper function
+		variables, err := r.parseVariables(variablesJSON)
+		if err != nil {
+			return nil, domain.DatabaseError("Failed to unmarshal template variables", err)
+		}
+		template.Variables = variables
+
 		templates = append(templates, &template)
 	}
 
@@ -226,6 +236,13 @@ func (r *SQLTemplateRepository) FindByName(ctx context.Context, name string) (*d
 		return nil, domain.DatabaseError("Failed to find template by name", err)
 	}
 
+	// Parse JSON variables using helper function
+	variables, err := r.parseVariables(variablesJSON)
+	if err != nil {
+		return nil, domain.DatabaseError("Failed to unmarshal template variables", err)
+	}
+	template.Variables = variables
+
 	return &template, nil
 }
 
@@ -262,6 +279,13 @@ func (r *SQLTemplateRepository) Pagination(ctx context.Context, limit, offset in
 			return nil, domain.DatabaseError("Failed to scan template", err)
 		}
 
+		// Parse JSON variables using helper function
+		variables, err := r.parseVariables(variablesJSON)
+		if err != nil {
+			return nil, domain.DatabaseError("Failed to unmarshal template variables", err)
+		}
+		template.Variables = variables
+
 		templates = append(templates, &template)
 	}
 
@@ -287,4 +311,128 @@ func (r *SQLTemplateRepository) Count(ctx context.Context) (int, error) {
 	}
 
 	return count, nil
+}
+
+// FindWithPagination mendapatkan template dengan pagination dan search
+func (r *SQLTemplateRepository) FindWithPagination(ctx context.Context, limit, offset int, search, status string) ([]*domain.Template, int64, error) {
+	var conditions []string
+	var args []interface{}
+	argIndex := 1
+
+	// Base query
+	baseQuery := `FROM email_templates`
+	countQuery := `SELECT COUNT(*) ` + baseQuery
+	selectQuery := `
+	SELECT 
+		id, name, description, subject, plain_body, html_body, 
+		variables, is_active, version, created_at, updated_at
+	` + baseQuery
+
+	// Add search condition
+	if search != "" {
+		conditions = append(conditions, fmt.Sprintf("(name ILIKE $%d OR description ILIKE $%d)", argIndex, argIndex))
+		args = append(args, "%"+search+"%")
+		argIndex++
+	}
+
+	// Add status condition
+	if status == "active" {
+		conditions = append(conditions, fmt.Sprintf("is_active = $%d", argIndex))
+		args = append(args, true)
+		argIndex++
+	} else if status == "inactive" {
+		conditions = append(conditions, fmt.Sprintf("is_active = $%d", argIndex))
+		args = append(args, false)
+		argIndex++
+	}
+
+	// Build WHERE clause
+	if len(conditions) > 0 {
+		whereClause := " WHERE " + strings.Join(conditions, " AND ")
+		countQuery += whereClause
+		selectQuery += whereClause
+	}
+
+	// Get total count
+	var total int64
+	err := r.db.QueryRowContext(ctx, countQuery, args...).Scan(&total)
+	if err != nil {
+		return nil, 0, domain.DatabaseError("Failed to count templates", err)
+	}
+
+	// Add ordering and pagination
+	selectQuery += fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d OFFSET $%d", argIndex, argIndex+1)
+	args = append(args, limit, offset)
+
+	// Execute query
+	rows, err := r.db.QueryContext(ctx, selectQuery, args...)
+	if err != nil {
+		return nil, 0, domain.DatabaseError("Failed to query templates", err)
+	}
+	defer rows.Close()
+
+	var templates []*domain.Template
+	for rows.Next() {
+		var template domain.Template
+		var variablesJSON []byte
+
+		err := rows.Scan(
+			&template.ID,
+			&template.Name,
+			&template.Description,
+			&template.Subject,
+			&template.PlainBody,
+			&template.HTMLBody,
+			&variablesJSON,
+			&template.IsActive,
+			&template.Version,
+			&template.CreatedAt,
+			&template.UpdatedAt,
+		)
+		if err != nil {
+			return nil, 0, domain.DatabaseError("Failed to scan template", err)
+		}
+
+		// Parse JSON variables using helper function
+		variables, err := r.parseVariables(variablesJSON)
+		if err != nil {
+			return nil, 0, domain.DatabaseError("Failed to unmarshal template variables", err)
+		}
+		template.Variables = variables
+
+		templates = append(templates, &template)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, 0, domain.DatabaseError("Error iterating template rows", err)
+	}
+
+	return templates, total, nil
+}
+
+// parseVariables parses JSON variables with support for both array and object formats
+func (r *SQLTemplateRepository) parseVariables(variablesJSON []byte) (map[string]interface{}, error) {
+	if len(variablesJSON) == 0 {
+		return nil, nil
+	}
+
+	// Try to unmarshal as map[string]interface{} first
+	var variables map[string]interface{}
+	if err := json.Unmarshal(variablesJSON, &variables); err == nil {
+		return variables, nil
+	}
+
+	// If that fails, try to unmarshal as []string (legacy format)
+	var variableArray []string
+	if err := json.Unmarshal(variablesJSON, &variableArray); err == nil {
+		// Convert array to map with empty values
+		variables = make(map[string]interface{})
+		for _, variable := range variableArray {
+			variables[variable] = ""
+		}
+		return variables, nil
+	}
+
+	// If both fail, return error
+	return nil, fmt.Errorf("failed to parse variables JSON: unsupported format")
 }

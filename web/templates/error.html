@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{.Title}}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#1e293b",
+                400: "#60a5fa",
+                500: "#3b82f6",
+                600: "#2563eb",
+                700: "#1d4ed8",
+              },
+              dark: {
+                50: "#f8fafc",
+                100: "#f1f5f9",
+                200: "#e2e8f0",
+                300: "#cbd5e1",
+                400: "#94a3b8",
+                500: "#64748b",
+                600: "#475569",
+                700: "#334155",
+                800: "#1e293b",
+                900: "#0f172a",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body class="bg-dark-900">
+    <!-- Navigation -->
+    <nav class="bg-primary-500 shadow-lg border-b border-dark-700">
+      <div class="mx-auto px-4">
+        <div class="flex justify-between h-16">
+          <div class="flex items-center">
+            <a
+              href="/dashboard"
+              class="flex items-center text-white font-bold text-xl"
+            >
+              <i class="fas fa-envelope mr-3 text-primary-400"></i>Email Service
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <div class="min-h-screen flex items-center justify-center px-4">
+      <div class="max-w-md w-full">
+        <div
+          class="bg-dark-800 rounded-xl shadow-lg border border-dark-700 p-8 text-center"
+        >
+          <div class="mb-6">
+            {{if eq .Code 404}}
+            <i class="fas fa-search fa-4x text-yellow-500 mb-4"></i>
+            {{else if eq .Code 500}}
+            <i class="fas fa-exclamation-triangle fa-4x text-red-500 mb-4"></i>
+            {{else}}
+            <i class="fas fa-exclamation-circle fa-4x text-orange-500 mb-4"></i>
+            {{end}}
+          </div>
+
+          <h1 class="text-3xl font-bold text-white mb-2">
+            {{if .Code}}{{.Code}}{{else}}Error{{end}}
+          </h1>
+
+          <p class="text-gray-400 mb-6">
+            {{if .Message}}{{.Message}}{{else}}Something went wrong{{end}}
+          </p>
+
+          <div class="space-y-3">
+            <a
+              href="/dashboard"
+              class="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 inline-block"
+            >
+              <i class="fas fa-home mr-2"></i>Go to Dashboard
+            </a>
+
+            <button
+              onclick="history.back()"
+              class="w-full bg-dark-700 hover:bg-dark-600 text-gray-300 font-semibold py-2 px-4 rounded-lg transition duration-200"
+            >
+              <i class="fas fa-arrow-left mr-2"></i>Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
