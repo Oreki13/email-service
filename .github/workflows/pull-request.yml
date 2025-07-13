@@ -51,7 +51,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24"
+          go-version: "1.24.5"
 
       - name: Install dependencies
         run: go mod download
@@ -70,7 +70,7 @@ jobs:
           RABBITMQ_PORT: 5672
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage.out
@@ -85,7 +85,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24"
+          go-version: "1.24.5"
 
       - name: Run gosec Security Scanner
         uses: securego/gosec@master
@@ -110,7 +110,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: "1.24"
+          go-version: "1.24.5"
 
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v3
